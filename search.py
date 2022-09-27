@@ -145,7 +145,11 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     "*** YOUR CODE HERE ***"
     closed = set()
     queue = util.PriorityQueue()
-    queue.push(Node(problem.getStartState(), None, None), 0)
+    initialProirity = heuristic(problem.getStartState(), problem)
+    queue.push(
+        Node(problem.getStartState(), None, None, initialProirity),
+        initialProirity
+    )
 
     while queue.isEmpty() is not True:
         node = queue.pop()
@@ -166,8 +170,10 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
 
             for neighbour in problem.getSuccessors(node.state):
                 priority = heuristic(neighbour[0], problem)
-                queue.push(Node(neighbour[0], node,
-                           neighbour[1], priority), priority)
+                queue.push(
+                    Node(neighbour[0], node, neighbour[1], node.priority + neighbour[2]), 
+                    neighbour[2] + node.priority + priority
+                )
 
 
 def uniformCostSearch(problem: SearchProblem):
