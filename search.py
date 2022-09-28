@@ -141,6 +141,33 @@ def nullHeuristic(state, problem=None):
     return 0
 
 
+def greedySearch(problem: SearchProblem, heuristic=nullHeuristic):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    closed = set()
+    queue = util.PriorityQueue()
+    initialProirity = heuristic(problem.getStartState(), problem)
+    queue.push(
+        Node(problem.getStartState(), None, None, initialProirity),
+        initialProirity
+    )
+
+    while queue.isEmpty() is not True:
+        node = queue.pop()
+
+        if problem.isGoalState(node.state) is True:
+            return getPath(node)
+
+        if node.state not in closed:
+            closed.add(node.state)
+
+            for neighbour in problem.getSuccessors(node.state):
+                priority = heuristic(neighbour[0], problem)
+                queue.push(
+                    Node(neighbour[0], node, neighbour[1]), 
+                    priority
+                )
+
+
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
@@ -180,3 +207,4 @@ bfs = breadthFirstSearch
 dfs = depthFirstSearch
 astar = aStarSearch
 ucs = uniformCostSearch
+greedy = greedySearch
