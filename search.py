@@ -93,7 +93,7 @@ def depthFirstSearch(problem: SearchProblem):
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
 
-
+# TODO: Refactor all algorythms (have almost same logic)
 class Node:
     def __init__(self, state, previous, action, priority=0):
         self.state = state
