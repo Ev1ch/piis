@@ -101,10 +101,19 @@ class Node:
         self.action = action
         self.priority = priority
 
+def getPath(node: Node):
+    actions = list()
+
+    while node.action is not None:
+        actions.append(node.action)
+        node = node.previous
+
+    actions.reverse()
+        
+    return actions
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
     closed = set()
     queue = util.Queue()
     queue.push(Node(problem.getStartState(), None, None))
@@ -113,15 +122,7 @@ def breadthFirstSearch(problem: SearchProblem):
         node = queue.pop()
 
         if problem.isGoalState(node.state) is True:
-            actions = list()
-
-            while node.action is not None:
-                actions.append(node.action)
-                node = node.previous
-
-            actions.reverse()
-
-            return actions
+            return getPath(node)
 
         if node.state not in closed:
             closed.add(node.state)
@@ -155,15 +156,7 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
         node = queue.pop()
 
         if problem.isGoalState(node.state) is True:
-            actions = list()
-
-            while node.action is not None:
-                actions.append(node.action)
-                node = node.previous
-
-            actions.reverse()
-
-            return actions
+            return getPath(node)
 
         if node.state not in closed:
             closed.add(node.state)
