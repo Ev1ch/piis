@@ -184,12 +184,55 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def algorithm(self, state, depth, agentIndex, alpha, beta):
+        if depth == 0 or state.isWin() or state.isLose():
+            return (self.evaluationFunction(state), None)
+
+        if agentIndex == 0:
+            maxScore = -float('inf')
+            maxAction = None
+
+            for action in state.getLegalActions(agentIndex):
+                currentScore = self.algorithm(
+                    state.generateSuccessor(agentIndex, action), depth, agentIndex + 1, alpha, beta)
+
+                if currentScore[0] > maxScore:
+                    maxScore = currentScore[0]
+                    maxAction = action
+                    
+                if maxScore > beta:
+                    break
+                
+                alpha = max(maxScore, alpha)
+
+            return (maxScore, maxAction)
+
+        else:
+            isLastAgent = agentIndex == state.getNumAgents() - 1
+            minScore = float('inf')
+            minAction = None
+
+            for action in state.getLegalActions(agentIndex):
+                currentScore = self.algorithm(
+                    state.generateSuccessor(agentIndex, action), depth - 1 if isLastAgent else depth, 0 if isLastAgent else agentIndex + 1, alpha, beta)
+
+                if currentScore[0] < minScore:
+                    minScore = currentScore[0]
+                    minAction = action
+
+                if minScore < alpha:
+                    break
+                
+                beta = min(minScore, beta)
+
+            return (minScore, minAction)
+
     def getAction(self, gameState: GameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.algorithm(gameState, self.depth, 0, -float('inf'), float('inf'))[1]
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
