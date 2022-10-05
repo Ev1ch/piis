@@ -175,7 +175,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
         return self.algorithm(gameState, self.depth, 0)[1]
 
 
@@ -231,7 +230,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
         return self.algorithm(gameState, self.depth, 0, -float('inf'), float('inf'))[1]
 
 
@@ -276,7 +274,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
         return self.algorithm(gameState, self.depth, 0)[1]
 
 
