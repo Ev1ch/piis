@@ -3,34 +3,28 @@ import chess.svg
 
 
 class Agent:
-    def __init__(self, board: chess.Board, color: chess.Color):
-        raise NotImplementedError()
-
-    def evaluate(self):
-        raise NotImplementedError()
-
-    def algorithm(self):
-        raise NotImplementedError()
-
-    def getMove():
+    def getMove() -> chess.Move:
         raise NotImplementedError()
 
 
-class NegamaxAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int):
+class Euristic:
+    def evaluate(self, color: chess.Color) -> int:
+        raise NotImplementedError()
+
+
+class BasicEuristic(Euristic):
+    def __init__(self, board: chess.Board):
         self.board = board
-        self.color = color
-        self.depth = depth
 
-    def evaluate(self):
+    def evaluate(self, color: chess.Color) -> int:
         score = 0
 
         for i in range(64):
-            score += self.evaluateCell(chess.SQUARES[i])
+            score += self.evaluateCell(chess.SQUARES[i], color)
 
         return score
 
-    def evaluateCell(self, cell: int):
+    def evaluateCell(self, cell: int, color: chess.Color) -> int:
         pieceCost = 0
         pieceType = self.board.piece_type_at(cell)
 
@@ -45,17 +39,25 @@ class NegamaxAgent(Agent):
         if (pieceType == chess.QUEEN):
             pieceCost = 8.8
 
-        if (self.board.color_at(cell) != self.color):
+        if (self.board.color_at(cell) != color):
             return -pieceCost
 
         return pieceCost
 
+
+class NegamaxAgent(Agent):
+    def __init__(self, board: chess.Board, color: chess.Color, depth: int, euristic: Euristic):
+        self.board = board
+        self.color = color
+        self.depth = depth
+        self.euristic = euristic
+
     def getMove(self):
-        maxMove = None
+        maxMove = chess.Move.null
         max = float('-inf')
         for move in self.board.legal_moves:
             self.board.push(move)
-            score = -self.algorithm(self.depth)
+            score = -self.algorithm(0)
             self.board.pop()
 
             if score > max:
@@ -65,13 +67,13 @@ class NegamaxAgent(Agent):
         return maxMove
 
     def algorithm(self, depth):
-        if depth == 0:
-            return self.evaluate()
+        if depth == self.depth:
+            return self.euristic.evaluate(self.color)
 
         max = float('-inf')
         for move in self.board.legal_moves:
             self.board.push(move)
-            score = -self.algorithm(depth - 1)
+            score = -self.algorithm(depth + 1)
             self.board.pop()
 
             if score > max:
@@ -80,54 +82,137 @@ class NegamaxAgent(Agent):
         return max
 
 
-class GameEngine:
+class NegaScoutAgent(Agent):
+    def __init__(self, board: chess.Board, color: chess.Color, depth: int, euristic: Euristic):
+        self.board = board
+        self.color = color
+        self.depth = depth
+        self.euristic = euristic
+
+    def getMove(self):
+        maxMove = chess.Move.null
+        max = float('-inf')
+        for move in self.board.legal_moves:
+            self.board.push(move)
+            score = -self.algorithm(0, float('-inf'), float('inf'))
+            self.board.pop()
+
+            if score > max:
+                max = score
+                maxMove = move
+
+        return maxMove
+
+    def algorithm(self, depth, alpha, beta):
+        if depth == self.depth:
+            return self.euristic.evaluate(self.color)
+
+        a = alpha
+        b = beta
+        i = 0
+        for move in self.board.legal_moves:
+            self.board.push(move)
+            score = -self.algorithm(depth + 1, -b, -a)
+            self.board.pop()
+
+            if score > alpha and score < beta and depth < self.depth - 1 and i > 0:
+                a = -self.algorithm(depth + 1, -beta, -score)
+
+            if score > a:
+                a = score
+
+            if a >= beta:
+                return a
+
+            b = a + 1
+            i += 1
+
+        return a
+
+
+class PvsAgent(Agent):
+    def __init__(self, board: chess.Board, color: chess.Color, depth: int, euristic: Euristic):
+        self.board = board
+        self.color = color
+        self.depth = depth
+        self.euristic = euristic
+
+    def getMove(self):
+        maxMove = chess.Move.null
+        max = float('-inf')
+        for move in self.board.legal_moves:
+            self.board.push(move)
+            score = -self.algorithm(0, float('-inf'), float('inf'))
+            self.board.pop()
+
+            if score > max:
+                max = score
+                maxMove = move
+
+        return maxMove
+
+    def algorithm(self, depth, alpha, beta):
+        if depth == self.depth:
+            return self.euristic.evaluate(self.color)
+
+        a = alpha
+        b = beta
+        i = 0
+        for move in self.board.legal_moves:
+            self.board.push(move)
+            score = -self.algorithm(depth + 1, -b, -a)
+            self.board.pop()
+
+            if score > alpha and score < beta:
+                a = -self.algorithm(depth + 1, -beta, -alpha)
+
+            if a >= beta:
+                return a
+
+            b = a + 1
+            i += 1
+
+        return a
+
+
+class Game:
     def __init__(self, board: chess.Board):
         self.board = board
 
-    def playHumanMove(self):
-        print("Possible moves: ", self.board.legal_moves)
-        play = input("Enter your move: ")
-
-        self.board.push_san(play)
-
-    def playAIMove(self, maxDepth, color, method):
-        engine = NegamaxAgent(self.board, color, maxDepth)
+    def playAIMove(self,  color):
+        engine = PvsAgent(self.board, color, 2,
+                          BasicEuristic(self.board))
         bestMove = engine.getMove()
         print('BEST MOVE', bestMove)
         self.board.push(bestMove)
-        return
 
-    def startGame(self, method):
-        aiColor = chess.BLACK
+    def start(self):
+        # aiColor = chess.BLACK
         print("The game started!")
-        print("You play WHITE!")
-        maxDepth = 2
+        # print("You play WHITE!")
         turn = chess.WHITE
+
         while (not self.board.is_checkmate()):
             print(self.board)
+
             if turn == chess.WHITE:
                 print('\n\nWhite move\n\n')
-                self.playHumanMove()
+                self.playAIMove(chess.WHITE)
                 turn = chess.BLACK
-                continue
-            if turn == chess.BLACK:
+            else:
                 print('\n\nBlack move\n\n')
-                self.playAIMove(maxDepth, aiColor, method)
+                self.playAIMove(chess.BLACK)
                 turn = chess.WHITE
-                continue
-        return
 
 
-game = GameEngine(chess.Board())
+game = Game(chess.Board())
 
 # print("Possible methods: negamax, negascout, vps. negamax is default")
 
-method = ""
-method = method if method else "negamax"
 
 # if method != "negamax" and method != "negascout" and method != "vps":
 #     print("Wrong method")
 #     exit()
 
 # print("You choosed method", method)
-game.startGame(method)
+game.start()
