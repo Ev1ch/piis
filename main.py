@@ -1,35 +1,25 @@
 import chess
-import chess.svg
 
-from agents import PvsAgent
+from agents import NegamaxAgent, NegaScoutAgent, PvsAgent
 from heuristic import BasicHeuristic
 
 
 class Game:
-    def __init__(self, board: chess.Board):
-        self.board = board
+    def __init__(self):
+        self.board = chess.Board()
 
-    def makeAgentMove(self,  color):
-        agent = PvsAgent(self.board, color, 5,
+    def makeAgentMove(self):
+        agent = PvsAgent(self.board, self.board.turn, 3,
                          BasicHeuristic(self.board))
         move = agent.getMove()
         self.board.push(move)
 
     def start(self):
-        turn = chess.WHITE
-
-        while (not self.board.is_checkmate()):
+        while not self.board.is_checkmate():
+            self.makeAgentMove()
             print(self.board)
-
-            if turn == chess.WHITE:
-                print('\nWhite move\n')
-                self.makeAgentMove(chess.WHITE)
-                turn = chess.BLACK
-            else:
-                print('\nBlack move\n')
-                self.makeAgentMove(chess.BLACK)
-                turn = chess.WHITE
+            print('\n')
 
 
-game = Game(chess.Board())
+game = Game()
 game.start()

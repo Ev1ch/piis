@@ -23,6 +23,8 @@ class BasicHeuristic(Heuristic):
         for i in range(64):
             score += self.evaluateCell(chess.SQUARES[i], color)
 
+        score += self.evaluateCheckmate(color)
+
         return score
 
     def evaluateCell(self, cell: int, color: chess.Color) -> int:
@@ -36,3 +38,12 @@ class BasicHeuristic(Heuristic):
             return -score
 
         return score
+
+    def evaluateCheckmate(self, color: chess.Color):
+        if self.board.is_checkmate():
+            if (self.board.turn == color):
+                return -9999
+            else:
+                return 9999
+        else:
+            return 0
