@@ -9,7 +9,7 @@ class Game:
         self.board = board
 
     def makeAgentMove(self,  color):
-        agent = PvsAgent(self.board, color, 2,
+        agent = PvsAgent(self.board, color, 3,
                          BasicEuristic(self.board))
         move = agent.getMove()
         self.board.push(move)

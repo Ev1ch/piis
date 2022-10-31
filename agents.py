@@ -117,21 +117,25 @@ class PvsAgent(Agent):
         if depth == self.depth:
             return self.euristic.evaluate(self.color)
 
-        a = alpha
-        b = beta
-        i = 0
+        bSearchPv = True
         for move in self.board.legal_moves:
             self.board.push(move)
-            score = -self.algorithm(depth + 1, -b, -a)
+
+            if bSearchPv:
+                score = -self.algorithm(depth + 1, -beta, -alpha)
+            else:
+                score = -self.algorithm(depth + 1, -alpha - 1, -alpha)
+
+                if score > alpha and score < beta:
+                    score = -self.algorithm(depth + 1, -beta, -alpha)
+
             self.board.pop()
 
-            if score > alpha and score < beta:
-                a = -self.algorithm(depth + 1, -beta, -alpha)
+            if (score >= beta):
+                return beta
 
-            if a >= beta:
-                return a
+            if (score > alpha):
+                alpha = score
+                bSearchPv = False
 
-            b = a + 1
-            i += 1
-
-        return a
+        return alpha
