@@ -1,12 +1,12 @@
 import chess
 
 
-class Euristic:
+class Heuristic:
     def evaluate(self, color: chess.Color) -> int:
         raise NotImplementedError()
 
 
-class BasicEuristic(Euristic):
+class BasicHeuristic(Heuristic):
     def __init__(self, board: chess.Board):
         self.board = board
 

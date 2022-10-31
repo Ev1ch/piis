@@ -1,5 +1,5 @@
 import chess
-from euristics import Euristic
+from heuristic import Heuristic
 
 
 class Agent:
@@ -8,11 +8,11 @@ class Agent:
 
 
 class NegamaxAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int, euristic: Euristic):
+    def __init__(self, board: chess.Board, color: chess.Color, depth: int, heuristic: Heuristic):
         self.board = board
         self.color = color
         self.depth = depth
-        self.euristic = euristic
+        self.heuristic = heuristic
 
     def getMove(self):
         maxMove = chess.Move.null
@@ -30,7 +30,7 @@ class NegamaxAgent(Agent):
 
     def algorithm(self, depth):
         if depth == self.depth:
-            return self.euristic.evaluate(self.color)
+            return self.heuristic.evaluate(self.color)
 
         max = float('-inf')
         for move in self.board.legal_moves:
@@ -45,11 +45,11 @@ class NegamaxAgent(Agent):
 
 
 class NegaScoutAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int, euristic: Euristic):
+    def __init__(self, board: chess.Board, color: chess.Color, depth: int, heuristic: Heuristic):
         self.board = board
         self.color = color
         self.depth = depth
-        self.euristic = euristic
+        self.heuristic = heuristic
 
     def getMove(self):
         maxMove = chess.Move.null
@@ -67,7 +67,7 @@ class NegaScoutAgent(Agent):
 
     def algorithm(self, depth, alpha, beta):
         if depth == self.depth:
-            return self.euristic.evaluate(self.color)
+            return self.heuristic.evaluate(self.color)
 
         a = alpha
         b = beta
@@ -93,11 +93,11 @@ class NegaScoutAgent(Agent):
 
 
 class PvsAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int, euristic: Euristic):
+    def __init__(self, board: chess.Board, color: chess.Color, depth: int, heuristic: Heuristic):
         self.board = board
         self.color = color
         self.depth = depth
-        self.euristic = euristic
+        self.heuristic = heuristic
 
     def getMove(self):
         maxMove = chess.Move.null
@@ -115,7 +115,7 @@ class PvsAgent(Agent):
 
     def algorithm(self, depth, alpha, beta):
         if depth == self.depth:
-            return self.euristic.evaluate(self.color)
+            return self.heuristic.evaluate(self.color)
 
         bSearchPv = True
         for move in self.board.legal_moves:
