@@ -9,6 +9,13 @@ class Heuristic:
 class BasicHeuristic(Heuristic):
     def __init__(self, board: chess.Board):
         self.board = board
+        self.points = {
+            chess.PAWN: 1,
+            chess.BISHOP: 3,
+            chess.KNIGHT: 4,
+            chess.ROOK: 5,
+            chess.QUEEN: 8
+        }
 
     def evaluate(self, color: chess.Color) -> int:
         score = 0
@@ -19,21 +26,13 @@ class BasicHeuristic(Heuristic):
         return score
 
     def evaluateCell(self, cell: int, color: chess.Color) -> int:
-        pieceCost = 0
-        pieceType = self.board.piece_type_at(cell)
+        piece = self.board.piece_type_at(cell)
 
-        if (pieceType == chess.PAWN):
-            pieceCost = 1
-        if (pieceType == chess.ROOK):
-            pieceCost = 5.1
-        if (pieceType == chess.BISHOP):
-            pieceCost = 3.33
-        if (pieceType == chess.KNIGHT):
-            pieceCost = 3.2
-        if (pieceType == chess.QUEEN):
-            pieceCost = 8.8
+        score = 0
+        if piece in self.points:
+            score = self.points[piece]
 
         if (self.board.color_at(cell) != color):
-            return -pieceCost
+            return -score
 
-        return pieceCost
+        return score
