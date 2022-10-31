@@ -1,4 +1,5 @@
 import chess
+
 from heuristic import Heuristic
 
 

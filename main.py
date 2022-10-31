@@ -1,7 +1,8 @@
 import chess
 import chess.svg
+
 from agents import PvsAgent
-from euristics import BasicEuristic
+from heuristic import BasicHeuristic
 
 
 class Game:
@@ -9,8 +10,8 @@ class Game:
         self.board = board
 
     def makeAgentMove(self,  color):
-        agent = PvsAgent(self.board, color, 3,
-                         BasicEuristic(self.board))
+        agent = PvsAgent(self.board, color, 5,
+                         BasicHeuristic(self.board))
         move = agent.getMove()
         self.board.push(move)
 
