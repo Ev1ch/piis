@@ -1,7 +1,7 @@
 import chess
 
 from agents import NegamaxAgent, NegaScoutAgent, PvsAgent
-from heuristic import BasicHeuristic
+from heuristic import BasicHeuristic, MaterialHeuristic
 
 
 class Game:
@@ -9,8 +9,8 @@ class Game:
         self.board = chess.Board()
 
     def makeAgentMove(self):
-        agent = NegamaxAgent(self.board, self.board.turn, 2,
-                             BasicHeuristic(self.board))
+        agent = PvsAgent(self.board, self.board.turn, 3,
+                         MaterialHeuristic(self.board))
         move = agent.getMove()
         self.board.push(move)
 
