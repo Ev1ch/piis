@@ -9,8 +9,8 @@ class Game:
         self.board = chess.Board()
 
     def makeAgentMove(self):
-        agent = PvsAgent(self.board, self.board.turn, 3,
-                         BasicHeuristic(self.board))
+        agent = NegamaxAgent(self.board, self.board.turn, 2,
+                             BasicHeuristic(self.board))
         move = agent.getMove()
         self.board.push(move)
 
