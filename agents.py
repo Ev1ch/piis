@@ -1,6 +1,10 @@
 import chess
+import chess.engine
+import random
+import math
 
 from heuristic import Heuristic
+from tree import Node
 
 
 class Agent:
@@ -8,135 +12,79 @@ class Agent:
         raise NotImplementedError()
 
 
-class NegamaxAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int, heuristic: Heuristic):
+class MctsAgent(Agent):
+    def __init__(self, board: chess.Board, color: chess.Color, heuristic: Heuristic):
         self.board = board
         self.color = color
-        self.depth = depth
         self.heuristic = heuristic
 
     def getMove(self):
-        maxMove = chess.Move.null
-        max = float('-inf')
-        for move in self.board.legal_moves:
-            self.board.push(move)
-            score = -self.algorithm(0)
-            self.board.pop()
+        return self.algorithm()
 
-            if score > max:
-                max = score
-                maxMove = move
+    def algorithm(self):
+        searchedChildren = 0
+        root = Node(self.board, None, None)
 
-        return maxMove
+        while searchedChildren < 16:
+            leaf = self.getLeaf(root)
 
-    def algorithm(self, depth):
-        if depth == self.depth:
-            return self.heuristic.evaluate(self.color)
-
-        max = float('-inf')
-        for move in self.board.legal_moves:
-            self.board.push(move)
-            score = -self.algorithm(depth + 1)
-            self.board.pop()
-
-            if score > max:
-                max = score
-
-        return max
-
-
-class NegaScoutAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int, heuristic: Heuristic):
-        self.board = board
-        self.color = color
-        self.depth = depth
-        self.heuristic = heuristic
-
-    def getMove(self):
-        maxMove = chess.Move.null
-        max = float('-inf')
-        for move in self.board.legal_moves:
-            self.board.push(move)
-            score = -self.algorithm(0, float('-inf'), float('inf'))
-            self.board.pop()
-
-            if score > max:
-                max = score
-                maxMove = move
-
-        return maxMove
-
-    def algorithm(self, depth, alpha, beta):
-        if depth == self.depth:
-            return self.heuristic.evaluate(self.color)
-
-        a = alpha
-        b = beta
-        i = 0
-        for move in self.board.legal_moves:
-            self.board.push(move)
-            score = -self.algorithm(depth + 1, -b, -a)
-            self.board.pop()
-
-            if score > alpha and score < beta and depth < self.depth - 1 and i > 0:
-                a = -self.algorithm(depth + 1, -beta, -score)
-
-            if score > a:
-                a = score
-
-            if a >= beta:
-                return a
-
-            b = a + 1
-            i += 1
-
-        return a
-
-
-class PvsAgent(Agent):
-    def __init__(self, board: chess.Board, color: chess.Color, depth: int, heuristic: Heuristic):
-        self.board = board
-        self.color = color
-        self.depth = depth
-        self.heuristic = heuristic
-
-    def getMove(self):
-        maxMove = chess.Move.null
-        max = float('-inf')
-        for move in self.board.legal_moves:
-            self.board.push(move)
-            score = -self.algorithm(0, float('-inf'), float('inf'))
-            self.board.pop()
-
-            if score > max:
-                max = score
-                maxMove = move
-
-        return maxMove
-
-    def algorithm(self, depth, alpha, beta):
-        if depth == self.depth:
-            return self.heuristic.evaluate(self.color)
-
-        bSearchPv = True
-        for move in self.board.legal_moves:
-            self.board.push(move)
-
-            if bSearchPv:
-                score = -self.algorithm(depth + 1, -beta, -alpha)
+            if leaf.unexploredMoves:
+                child = self.expand(leaf)
             else:
-                score = -self.algorithm(depth + 1, -alpha - 1, -alpha)
+                child = leaf
 
-                if score > alpha and score < beta:
-                    score = -self.algorithm(depth + 1, -beta, -alpha)
+            score = self.evaluate(child)
+            self.backpropagate(child, score)
+            searchedChildren += 1
 
-            self.board.pop()
+        move = max(root.children, key=lambda node: node.simulations)
 
-            if (score >= beta):
-                return beta
+        return move.action
 
-            if (score > alpha):
-                alpha = score
-                bSearchPv = False
+    def getLeaf(self, node: Node):
+        maxNode = node
+        while (not maxNode.unexploredMoves) and maxNode.children:
+            selection = max(maxNode.children, key=self.getUcb)
+            node = selection
 
-        return alpha
+        return node
+
+    def getUcb(self, node: Node):
+        try:
+            ucb = (node.simulations - node.wins / node.simulations) + (math.sqrt(2)
+                                                                       * math.sqrt(math.log(node.parent.simulations) / node.simulations))
+        except ZeroDivisionError:
+            ucb = float('inf')
+
+        return ucb
+
+    def expand(self, node: Node):
+        move = node.unexploredMoves.pop()
+        stateCopy = node.state.copy()
+        stateCopy.push(move)
+        child = Node(stateCopy, node, move)
+        node.children.append(child)
+
+        return child
+
+    def evaluate(self, node: Node):
+        return self.simulate(node)
+
+    def simulate(self, node: Node):
+        board = node.state.copy()
+        while not board.is_game_over():
+            move = random.choice(list(board.legal_moves))
+            board.push(move)
+
+        return self.heuristic.evaluate(node.state, node.state.turn)
+
+    def backpropagate(self, node: Node, result: int):
+        node.wins += result.pov(node.color).expectation()
+        node.simulations += 1
+
+        currentNode = node
+        while currentNode.parent is not None:
+            currentNode.parent.wins += result.pov(
+                currentNode.parent.color).expectation()
+            currentNode.parent.simulations += 1
+            currentNode = currentNode.parent
